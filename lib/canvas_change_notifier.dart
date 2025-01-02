@@ -1,10 +1,7 @@
-import 'dart:collection';
-
-import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
 import 'package:stack/stack.dart' as StackDS;
 
-class CanvasChangeNotifier extends ChangeNotifier {
+class CanvasChangeNotifier{
   List<TextItem?> textItems = [];
   int selected = -1;
   StackDS.Stack<Operation> undoStack = StackDS.Stack();
@@ -14,13 +11,17 @@ class CanvasChangeNotifier extends ChangeNotifier {
     textItems.add(item);
     undoStack.push(Operation(
         idx: textItems.isEmpty ? 0 : textItems.length - 1, item: null));
-    notifyListeners();
+  }
+
+  void changeColor(Color newColor){
+    if(selected == -1) return;
+    undoStack.push(Operation(idx: selected, item: textItems[selected]));
+    textItems[selected] = textItems[selected]!.copyWith(color: newColor);
   }
 
   void removeText(int itemIdx) {
     textItems[itemIdx] = null;
     undoStack.push(Operation(idx: itemIdx, item: null));
-    notifyListeners();
   }
 
   void onDrag(int itemIdx, double dx, double dy) {
@@ -28,17 +29,14 @@ class CanvasChangeNotifier extends ChangeNotifier {
     textItems[itemIdx]!.left += dx;
     textItems[itemIdx]!.top += dy;
 
-    notifyListeners();
   }
 
   void onSelect(int itemIdx) {
     selected = itemIdx;
-    notifyListeners();
   }
 
   void clearSelect() {
     selected = -1;
-    notifyListeners();
   }
 
   void increaseSize() {
@@ -47,7 +45,6 @@ class CanvasChangeNotifier extends ChangeNotifier {
           Operation(idx: selected, item: textItems[selected]!.copyWith()));
       textItems[selected]!.size += 2;
     }
-    notifyListeners();
   }
 
   void decreaseSize() {
@@ -56,7 +53,6 @@ class CanvasChangeNotifier extends ChangeNotifier {
           Operation(idx: selected, item: textItems[selected]!.copyWith()));
       textItems[selected]!.size -= 2;
     }
-    notifyListeners();
   }
 
   void setFont(String font) {
@@ -64,7 +60,6 @@ class CanvasChangeNotifier extends ChangeNotifier {
     undoStack
         .push(Operation(idx: selected, item: textItems[selected]!.copyWith()));
     textItems[selected]!.fontFamily = font;
-    notifyListeners();
   }
 
   void recordDrag(int itemIdx) {
@@ -80,11 +75,11 @@ class CanvasChangeNotifier extends ChangeNotifier {
         size: textItems[selected]!.size,
         left: textItems[selected]!.left,
         top: textItems[selected]!.top,
+        color: textItems[selected]!.color,
         isFocused: textItems[selected]!.isFocused);
     item.text = text;
     undoStack.push(Operation(idx: selected, item: item));
     textItems[selected]!.text = newText;
-    notifyListeners();
   }
 
   void undo() {
@@ -93,7 +88,7 @@ class CanvasChangeNotifier extends ChangeNotifier {
       redoQueue.push(Operation(
           idx: operation.idx, item: textItems[operation.idx]!.copyWith()));
       textItems[operation.idx] = operation.item;
-      notifyListeners();
+
     }
   }
 
@@ -103,7 +98,6 @@ class CanvasChangeNotifier extends ChangeNotifier {
     undoStack.push(Operation(
         idx: operation.idx, item: textItems[operation.idx]?.copyWith()));
     textItems[operation.idx] = operation.item;
-    notifyListeners();
   }
 }
 
@@ -113,6 +107,7 @@ class TextItem {
   int size;
   double left;
   double top;
+  Color color;
   bool isFocused;
 
   TextItem(
@@ -121,16 +116,19 @@ class TextItem {
       required this.size,
       required this.left,
       required this.top,
+      required this.color,
       required this.isFocused});
 
   TextItem copyWith(
       {String? text,
       String? fontFamily,
       int? size,
+      Color? color,
       double? left,
       double? top,
       bool? isFocused}) {
     return TextItem(
+      color: color??this.color,
         text: text ?? this.text,
         fontFamily: fontFamily ?? this.fontFamily,
         size: size ?? this.size,
