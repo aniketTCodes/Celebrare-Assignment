@@ -10,6 +10,7 @@ dependencies:
   dartz: ^0.10.1
   flutter:
     sdk: flutter
+  flutter_colorpicker: ^1.1.0
   provider: ^6.1.2
   stack: ^0.2.2
 
