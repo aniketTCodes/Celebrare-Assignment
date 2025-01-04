@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:stack/stack.dart' as StackDS;
 
 class CanvasChangeNotifier{
+  final GlobalKey key = GlobalKey();
   List<TextItem?> textItems = [];
   int selected = -1;
   StackDS.Stack<Operation> undoStack = StackDS.Stack();
@@ -118,6 +119,8 @@ class TextItem {
       required this.top,
       required this.color,
       required this.isFocused});
+
+  
 
   TextItem copyWith(
       {String? text,
