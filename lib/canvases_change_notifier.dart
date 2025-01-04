@@ -9,6 +9,11 @@ class CanvasesChangeNotifier  extends ChangeNotifier{
   ];
   int current = 0;
 
+  void reorderCanvases(List<CanvasChangeNotifier> new_canvases){
+      canvases = new_canvases;
+      notifyListeners();
+  }
+
   void onAddText(TextItem item) {
     canvases[current].onAddText(item);
     notifyListeners();
