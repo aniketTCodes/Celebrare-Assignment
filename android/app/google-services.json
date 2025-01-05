@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "446543782055",
+    "project_id": "celebrate-assignment",
+    "storage_bucket": "celebrate-assignment.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:446543782055:android:e4fd03cb7c823e35f57b82",
+        "android_client_info": {
+          "package_name": "com.example.celebrate_assignment"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBlHLfUp6qzHd9ZhUR4ZNHT2-mXA7S18Fc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

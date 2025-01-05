@@ -4,6 +4,7 @@ import 'package:celebrate_assignment/canvas.dart';
 import 'package:celebrate_assignment/canvas_change_notifier.dart';
 import 'package:celebrate_assignment/canvases_change_notifier.dart';
 import 'package:celebrate_assignment/text_widget.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
@@ -13,7 +14,9 @@ import 'dart:developer' as dev;
 
 import 'package:screenshot/screenshot.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   runApp(MainApp());
 }
 
@@ -26,7 +29,7 @@ class MainApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       home: Scaffold(
         body: ChangeNotifierProvider<CanvasesChangeNotifier>(
-          create: (context) => CanvasesChangeNotifier(),
+          create: (context) => CanvasesChangeNotifier()..loadFromFirebase(),
           child: MyEditor(),
         ),
       ),
@@ -69,6 +72,97 @@ class _MyEditorState extends State<MyEditor> {
             mainAxisSize: MainAxisSize.max,
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
+              Builder(
+                builder: (context) {
+                  if (Provider.of<CanvasesChangeNotifier>(context,
+                          listen: false)
+                      .canvases
+                      .isEmpty) {
+                    GestureDetector(
+                      onTap: () {
+                        Provider.of<CanvasesChangeNotifier>(context)
+                            .addCanvases();
+
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text("Added new canvase"),
+                          duration: Durations.medium2,
+                          backgroundColor: Colors.blue,
+                        ));
+                      },
+                      child: Container(
+                        padding: EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.blue, width: 2),
+                        ),
+                        child: Icon(
+                          Icons.add,
+                          color: Colors.blue,
+                        ),
+                      ),
+                    );
+                  }
+                  return Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () {
+                          Provider.of<CanvasesChangeNotifier>(context,
+                                  listen: false)
+                              .addCanvases();
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: Text("Added new canvase"),
+                            duration: Durations.medium2,
+                            backgroundColor: Colors.blue,
+                          ));
+                        },
+                        child: Container(
+                          margin: EdgeInsets.only(right: 8),
+                          padding: EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.blue, width: 2),
+                          ),
+                          child: Icon(
+                            Icons.add,
+                            color: Colors.blue,
+                          ),
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          try {
+                            Provider.of<CanvasesChangeNotifier>(context,
+                                    listen: false)
+                                .saveToFirestore();
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                              content: Text("Saved"),
+                              backgroundColor: Colors.blue,
+                              duration: Durations.medium1,
+                            ));
+                          } on Exception catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                              content: Text(e.toString()),
+                              backgroundColor: Colors.blue,
+                            ));
+                          }
+                        },
+                        child: Container(
+                          margin: EdgeInsets.only(right: 8),
+                          padding: EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.blue, width: 2),
+                          ),
+                          child: Icon(
+                            Icons.upload,
+                            color: Colors.blue,
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
               GestureDetector(
                 onTap: () =>
                     Provider.of<CanvasesChangeNotifier>(context, listen: false)
@@ -126,7 +220,6 @@ class _MyEditorState extends State<MyEditor> {
                         ),
                       ),
                       child: RepaintBoundary(
-                        key: e.key,
                         child: MyCanvas(
                           onWidgetSelect: (value, selectedFont) {
                             setState(() {
@@ -140,12 +233,21 @@ class _MyEditorState extends State<MyEditor> {
                   );
                 },
               ).toList();
-              return PageView(
-                onPageChanged: (pageIdx) {
-                  value.changePage(pageIdx);
-                },
-                children: widgets,
-              );
+              return Builder(builder: (context) {
+                if (widgets.isEmpty) {
+                  return Center(
+                      child: Text(
+                    "Add canvases",
+                    style: TextStyle(fontSize: 28),
+                  ));
+                }
+                return PageView(
+                  onPageChanged: (pageIdx) {
+                    value.changePage(pageIdx);
+                  },
+                  children: widgets,
+                );
+              });
             }),
           ),
           Column(

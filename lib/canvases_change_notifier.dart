@@ -1,17 +1,44 @@
 import 'package:celebrate_assignment/canvas_change_notifier.dart';
+import 'package:celebrate_assignment/firebase_repository.dart';
 import 'package:flutter/material.dart';
+import 'dart:developer' as dev;
 
-class CanvasesChangeNotifier  extends ChangeNotifier{
-  List<CanvasChangeNotifier> canvases = [
-    CanvasChangeNotifier(),
-    CanvasChangeNotifier(),
-    CanvasChangeNotifier()
-  ];
-  int current = 0;
+import 'package:uuid/uuid.dart';
 
-  void reorderCanvases(List<CanvasChangeNotifier> new_canvases){
-      canvases = new_canvases;
-      notifyListeners();
+class CanvasesChangeNotifier extends ChangeNotifier {
+  final _firebaseRepository = FirebaseRepository();
+  List<CanvasChangeNotifier> canvases = [];
+  int current = -1;
+
+  void addCanvases() {
+    canvases.add(CanvasChangeNotifier(id: Uuid().v1(), textItems: []));
+    notifyListeners();
+  }
+
+  void loadFromFirebase() async {
+    try {
+      canvases = await _firebaseRepository.getCanvases();
+      if (current == -1) {
+        current = 0;
+      }
+    } on Exception catch (e) {
+      rethrow;
+    }
+    notifyListeners();
+  }
+
+  Future<void> saveToFirestore() async {
+    try {
+      await _firebaseRepository.updateCanvases(canvases);
+    } on Exception {
+      dev.log('Exception');
+      rethrow;
+    }
+  }
+
+  void reorderCanvases(List<CanvasChangeNotifier> new_canvases) {
+    canvases = new_canvases;
+    notifyListeners();
   }
 
   void onAddText(TextItem item) {
@@ -19,12 +46,12 @@ class CanvasesChangeNotifier  extends ChangeNotifier{
     notifyListeners();
   }
 
-  void changeColor(Color color){
+  void changeColor(Color color) {
     canvases[current].changeColor(color);
     notifyListeners();
   }
 
-  void changePage(int idx){
+  void changePage(int idx) {
     current = idx;
     notifyListeners();
   }
@@ -35,7 +62,7 @@ class CanvasesChangeNotifier  extends ChangeNotifier{
   }
 
   void onDrag(int itemIdx, double dx, double dy) {
-    canvases[current].onDrag(itemIdx,dx,dy);
+    canvases[current].onDrag(itemIdx, dx, dy);
 
     notifyListeners();
   }
@@ -61,7 +88,7 @@ class CanvasesChangeNotifier  extends ChangeNotifier{
   }
 
   void setFont(String font) {
-   canvases[current].setFont(font);
+    canvases[current].setFont(font);
     notifyListeners();
   }
 
@@ -70,19 +97,17 @@ class CanvasesChangeNotifier  extends ChangeNotifier{
   }
 
   void setText(String text, String newText) {
-    canvases[current].setText(text,newText);
+    canvases[current].setText(text, newText);
     notifyListeners();
   }
 
   void undo() {
     canvases[current].undo();
-      notifyListeners();
-    
+    notifyListeners();
   }
 
   void redo() {
     canvases[current].redo();
     notifyListeners();
   }
-
 }
